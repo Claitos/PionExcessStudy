@@ -218,6 +218,7 @@ function plot_rel_excess_f0_colors(rel_excess, rel_excess_err_exp, rel_excess_er
     ax.text(0.05, 0.88, "0-5% centrality", transform=ax.transAxes)
     ax.text(0.05, 0.84, L"$\pi^+$ / $\pi^-$ ", transform=ax.transAxes)
     ax.text(0.05, 0.80, "PDG2016+", transform=ax.transAxes)
+    ax.text(0.05, 0.75, L"$f_0(500) \rightarrow \pi \pi$", transform=ax.transAxes)
 
 
     mean_excess = mean(rel_excess)
@@ -233,6 +234,149 @@ function plot_rel_excess_f0_colors(rel_excess, rel_excess_err_exp, rel_excess_er
     end
     
 end
+
+
+
+
+
+
+
+
+
+
+
+function plot_spectra_relative_colors_f0(results_cuts::ResultsList, data::Data; excess::Bool=false, save::Bool=false)
+
+    stat_uncertainties = (-data.yerrm_stat, data.yerrp_stat)
+    syst_uncertainties = (-data.yerrm_syst, data.yerrp_syst)
+    total_uncertainties = (sqrt.(data.yerrm_stat .^ 2 .+ data.yerrm_syst .^ 2), sqrt.(data.yerrp_stat .^ 2 .+ data.yerrp_syst .^ 2))
+
+    no_of_lists = length(results_cuts.multiplicity_total)
+    colors = ["tab:red", "tab:blue", "tab:green"]
+    linestyles = ["solid", "dashed", "dotted"]
+    labels = ["Reference", "without Width", "with Width"];
+
+    spectra_wo_widths = [getindex.((results_cuts.spectra_total[i])[:], 1) for i in 2:8]
+    spectra_w_widths = [getindex.((results_cuts.spectra_total[i])[:], 1) for i in 9:15]
+
+
+    if length(data.pt) == length(spectra_wo_widths[1])
+        pT_range_plotted = data.pt
+        subfix = ""
+    else
+        pT_range_plotted = collect(0:0.01:3)
+        subfix = "0pT"
+    end
+
+    fig, ax = subplots(3, 1, figsize=(5, 6), sharex=true, gridspec_kw=Dict("height_ratios" => [3, 1, 1], "hspace" => 0.05))
+
+    for i in 1:7
+        label_wo = i == 1 ? labels[2] : ""
+        label_w = i == 1 ? labels[3] : ""
+        linestyle = i == 1 ? linestyles[1] : linestyles[2]
+        alpha = i == 1 ? 1.0 : 0.5
+        ax[1].plot(pT_range_plotted, spectra_wo_widths[i], label=label_wo, color=colors[3], linestyle=linestyle, alpha=alpha)
+        ax[1].plot(pT_range_plotted, spectra_w_widths[i], label=label_w, color=colors[2], linestyle=linestyle, alpha=alpha)
+    end
+
+    ax[1].plot(1, 1000000, linestyle=linestyles[2], color="black", label=L"$f_0(500)$ mass edges")
+    ax[1].plot(pT_range_plotted, getindex.((results_cuts.spectra_total[1])[:], 1), label=labels[1], color=colors[1])
+    ax[1].errorbar(data.pt, data.dNdpt, yerr=total_uncertainties, xerr=data.xerrm, fmt=".", label="ALICE Data", color="black")
+
+    ax[1].set_yscale("log")
+    #ax[1].set_xlabel(L"$p_{\mathrm{T}}$ [GeV/c]")
+    ax[1].set_ylabel(L"$1 / (2\pi p_{\mathrm{T}}) \,\, dN/dp_{\mathrm{T}}dy \, $ [(GeV/c)$^{-2}$]")
+    ax[1].tick_params(which="both", direction="in", top=true, right=true)
+    ax[1].legend()
+    ax[1].set_ylim(1e-2, 1e4)
+
+    if excess == true
+        ax[1].set_ylim(2e1, 2e3)
+        ax[1].set_xlim(0.0, 1.0)
+    end
+
+    ax[1].text(0.05, 0.30, "PbPb @ 2.76 TeV", transform=ax[1].transAxes)
+    ax[1].text(0.05, 0.24, "0-5% centrality", transform=ax[1].transAxes)
+    ax[1].text(0.05, 0.18, L"$\pi^+$ / $\pi^-$ ", transform=ax[1].transAxes)
+    ax[1].text(0.05, 0.12, "PDG2016+", transform=ax[1].transAxes)  
+    ax[1].text(0.05, 0.05, L"$f_0(500) \rightarrow \pi \pi$", transform=ax[1].transAxes) 
+
+
+    for i in 1:7
+        label_wo = i == 1 ? labels[2] : ""
+        label_w = i == 1 ? labels[3] : ""
+        linestyle = i == 1 ? linestyles[1] : linestyles[2]
+        alpha = i == 1 ? 1.0 : 0.5
+        rel_spectra_wo_width = spectra_wo_widths[i] ./ getindex.((results_cuts.spectra_total[1])[:], 1)
+        ax[2].plot(pT_range_plotted, rel_spectra_wo_width, label=label_wo, color=colors[3], alpha=alpha, linestyle=linestyle)
+        rel_spectra_w_width = spectra_w_widths[i] ./ getindex.((results_cuts.spectra_total[1])[:], 1)
+        ax[3].plot(pT_range_plotted, rel_spectra_w_width, label=label_w, color=colors[2], alpha=alpha, linestyle=linestyle)
+    end
+
+    rel_spectra_ref = getindex.((results_cuts.spectra_total[1])[:], 1) ./ getindex.((results_cuts.spectra_total[1])[:], 1)
+    ax[2].plot(pT_range_plotted, rel_spectra_ref, label=labels[1], color=colors[1], linestyle="solid")
+    ax[3].plot(pT_range_plotted, rel_spectra_ref, label=labels[1], color=colors[1], linestyle="solid")
+
+    ax[3].set_xlabel(L"$p_{\mathrm{T}}$ [GeV/c]")
+    #ax[2].set_ylabel("ratio [arb.]")
+    ax[2].tick_params(which="both", direction="in", top=true, right=true)
+    ax[2].set_ylim(0.85, 1.15)
+    ax[3].tick_params(which="both", direction="in", top=true, right=true)
+    ax[3].set_ylim(0.85, 1.15)
+
+    fig.text(0.02, 0.25, "Ratio to Ref.", va="center", rotation="vertical")
+
+    if excess == true
+        ax[2].set_xlim(0, 1.0)
+        ax[3].set_xlim(0, 1.0)
+    end
+
+    if save == true
+        if excess == true
+            fig.savefig(directory * "f0_rel_spectra_excess" * subfix * ".png", dpi=300, bbox_inches="tight")
+        else
+            fig.savefig(directory * "f0_rel_spectra" * subfix * ".png", dpi=300, bbox_inches="tight")
+        end
+    else
+        fig.show()
+    end
+
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

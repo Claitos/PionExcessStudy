@@ -202,7 +202,7 @@ function plot_spectra_relative_colors(results_cuts::ResultsList, data::Data; exc
     ax[2].tick_params(which="both", direction="in", top=true, right=true)
     ax[2].set_ylim(0.85, 1.15)
     ax[3].tick_params(which="both", direction="in", top=true, right=true)
-    ax[3].set_ylim(0.85, 1.15)
+    ax[3].set_ylim(0.76, 1.05)
 
     fig.text(0.02, 0.25, "Ratio to Ref.", va="center", rotation="vertical")
 

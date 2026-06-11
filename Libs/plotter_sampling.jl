@@ -691,6 +691,46 @@ end
 
 
 
+function plot_rel_excess_hist_colors(excess, excess_thermal, case; save::Bool=false)
+
+    alpha = 0.5
+    bins = 15
+    colors = ["tab:blue", "tab:orange"]
+    sampled = [L"$M$", L"$BR$", L"$M$ & $BR$"]
+
+    fig, ax = subplots(1,1, figsize=(5,5));
+    ax.hist(excess, bins=bins, alpha=alpha, label="After Rescaling", color=colors[1])
+    ax.hist(excess_thermal, bins=bins, alpha=alpha, label="Before Rescaling", color=colors[2])
+    ax.set_ylabel("Counts")
+    ax.axvline(x=excess[1], linestyle="--", linewidth=2, label="Reference Case", color="tab:red")
+    #ax.axvline(x=excess[2002], linestyle="--", linewidth=2, label="Mean sampled masses", color="red")
+    ax.set_xlabel("relative pion excess")
+    #ax.set_title("Pion Excess")
+    ax.text(0.05, 0.92, "PbPb @ 2.76 TeV", transform=ax.transAxes)
+    ax.text(0.05, 0.88, "0-5% centrality", transform=ax.transAxes)
+    ax.text(0.05, 0.80, "PDG2016+", transform=ax.transAxes)
+    ax.text(0.05, 0.84, L"$\pi^+$ / $\pi^-$ ", transform=ax.transAxes)
+    ax.text(0.05, 0.70, "No. of Lists: $(length(excess)-2)", transform=ax.transAxes)
+    ax.text(0.05, 0.66, "w. sampled: "*sampled[case], transform=ax.transAxes)
+    mean_excess = mean(excess)
+    std_excess = std(excess, corrected=true)
+    std_excess_thermal = std(excess_thermal, corrected=true)
+    #ax.text(0.05, 0.6, "Mean: $(round(mean_excess, digits=4))", transform=ax.transAxes)
+    #ax.text(0.05, 0.60, "Standard Deviations:", transform=ax.transAxes)
+    ax.text(0.05, 0.56, L"$s=$" * "$(round(std_excess, digits=4))", transform=ax.transAxes, color=colors[1])
+    ax.text(0.05, 0.52, L"$s=$" * "$(round(std_excess_thermal, digits=4))", transform=ax.transAxes, color=colors[2])
+    ax.tick_params(which="both", direction="in", top=true, right=true)
+    ax.set_xlim(0.08, 0.115)
+    ax.legend()
+
+    if save==true
+        fig.savefig(directory*"pion_rel_excess_hist_colors.png", dpi=300, bbox_inches="tight")
+    end
+    
+end
+
+
+
 
 
 function plot_mean_pT(mean_pT_list, mean_pT_err_list; nsigma::Bool=false, edge::Bool=false, save::Bool=false)
