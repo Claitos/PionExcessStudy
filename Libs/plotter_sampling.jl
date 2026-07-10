@@ -694,7 +694,7 @@ end
 function plot_rel_excess_hist_colors(excess, excess_thermal, case; save::Bool=false)
 
     alpha = 0.5
-    bins = 15
+    bins = 16
     colors = ["tab:blue", "tab:orange"]
     sampled = [L"$M$", L"$BR$", L"$M$ & $BR$"]
 
@@ -721,12 +721,104 @@ function plot_rel_excess_hist_colors(excess, excess_thermal, case; save::Bool=fa
     ax.text(0.05, 0.52, L"$s=$" * "$(round(std_excess_thermal, digits=4))", transform=ax.transAxes, color=colors[2])
     ax.tick_params(which="both", direction="in", top=true, right=true)
     ax.set_xlim(0.08, 0.115)
+    ax.set_ylim(0, 350)
     ax.legend()
 
     if save==true
         fig.savefig(directory*"pion_rel_excess_hist_colors.png", dpi=300, bbox_inches="tight")
     end
     
+end
+
+
+function plot_sample_spectra_relative_colors(results_cuts::ResultsList, results_cuts_thermal::ResultsList, data::Data; save::Bool=false)
+
+    # 1 : reference spectrum
+    # 2/3 : mass +-1sigma      8/9 : mass +-2sigma          14/15 : mass +-3sigma
+    # 4/5 : width +-1sigma     10/11 : width +-2sigma       16/17 : width +-3sigma
+    # 6/7 : br +-1sigma        12/13 : br +-2sigma          18/19 : br +-3sigma
+    # if QM list 20 is the reference of QM list
+
+    stat_uncertainties = (-data.yerrm_stat, data.yerrp_stat)
+    syst_uncertainties = (-data.yerrm_syst, data.yerrp_syst)
+    total_uncertainties = (sqrt.(data.yerrm_stat .^ 2 .+ data.yerrm_syst .^ 2), sqrt.(data.yerrp_stat .^ 2 .+ data.yerrp_syst .^ 2))
+
+    no_of_lists = length(results_cuts.multiplicity_total)
+    colors = ["tab:red", "tab:blue", "tab:orange"]
+    linestyles = ["solid", "solid", "dashed", "dashed", "dotted", "dotted"]
+
+    start_index = 1
+
+    if length(data.pt) == length(getindex.((results_cuts.spectra_total[1])[:], 1))
+        pT_range_plotted = data.pt
+        subfix = ""
+    else
+        pT_range_plotted = collect(0:0.01:3)
+        subfix = "0pT"
+    end
+
+    fig, ax = subplots(3, 1, figsize=(5, 6), sharex=true, gridspec_kw=Dict("height_ratios" => [3, 1, 1], "hspace" => 0.05))
+
+    for i in start_index:no_of_lists
+        label_thermal = i == 2000 ? "Before Rescaling" : ""
+        label_total = i == 2000 ? "After Rescaling" : ""
+        ax[1].plot(pT_range_plotted, getindex.((results_cuts.spectra_total[i])[:], 1), label=label_total, color=colors[2], linestyle=linestyles[1], alpha=0.5)
+        ax[1].plot(pT_range_plotted, getindex.((results_cuts_thermal.spectra_total[i])[:], 1), label=label_thermal, color=colors[3], linestyle=linestyles[1], alpha=0.5)
+    end
+
+    ax[1].plot(pT_range_plotted, getindex.((results_cuts.spectra_total[1])[:], 1), label="Reference", color=colors[1])
+    ax[1].errorbar(data.pt, data.dNdpt, yerr=total_uncertainties, xerr=data.xerrm, fmt=".", label="ALICE Data", color="black")
+
+    ax[1].set_yscale("log")
+    #ax[1].set_xlabel(L"$p_{\mathrm{T}}$ [GeV/c]")
+    ax[1].set_ylabel(L"$1 / (2\pi p_{\mathrm{T}}) \,\, dN/dp_{\mathrm{T}}dy \, $ [(GeV/c)$^{-2}$]")
+    ax[1].tick_params(which="both", direction="in", top=true, right=true)
+    ax[1].legend()
+    ax[1].set_ylim(2e1, 2e3)
+    ax[1].set_xlim(0.0, 1.0)
+
+
+    ax[1].text(0.05, 0.24, "PbPb @ 2.76 TeV", transform=ax[1].transAxes)
+    ax[1].text(0.05, 0.18, "0-5% centrality", transform=ax[1].transAxes)
+    ax[1].text(0.05, 0.12, L"$\pi^+$ / $\pi^-$ ", transform=ax[1].transAxes)
+    ax[1].text(0.05, 0.06, "PDG2016+", transform=ax[1].transAxes)
+
+    ax[1].text(0.05, 0.42, "No. of Lists: 2000", transform=ax[1].transAxes)
+    ax[1].text(0.05, 0.36, L"w. sampled: $M$ & $BR$", transform=ax[1].transAxes)
+
+
+    for i in start_index:no_of_lists
+        rel_spectra_thermal = getindex.((results_cuts_thermal.spectra_total[i])[:], 1) ./ getindex.((results_cuts.spectra_total[1])[:], 1)
+        ax[2].plot(pT_range_plotted, rel_spectra_thermal, color=colors[3], alpha=0.5, linestyle=linestyles[1])
+        rel_spectra_total = getindex.((results_cuts.spectra_total[i])[:], 1) ./ getindex.((results_cuts.spectra_total[1])[:], 1)
+        ax[3].plot(pT_range_plotted, rel_spectra_total, color=colors[2], alpha=0.5, linestyle=linestyles[1])
+    end
+
+    rel_spectra_ref = getindex.((results_cuts.spectra_total[1])[:], 1) ./ getindex.((results_cuts.spectra_total[1])[:], 1)
+    ax[2].plot(pT_range_plotted, rel_spectra_ref, label="Reference", color=colors[1], linestyle="solid")
+    ax[3].plot(pT_range_plotted, rel_spectra_ref, label="Reference", color=colors[1], linestyle="solid")
+
+
+    ax[3].set_xlabel(L"$p_{\mathrm{T}}$ [GeV/c]")
+    #ax[2].set_ylabel("ratio [arb.]")
+    ax[2].tick_params(which="both", direction="in", top=true, right=true)
+    ax[2].set_ylim(0.85, 1.15)
+    ax[3].tick_params(which="both", direction="in", top=true, right=true)
+    ax[3].set_ylim(0.85, 1.15)
+
+    fig.text(0.02, 0.25, "Ratio to Ref.", va="center", rotation="vertical")
+
+   
+    ax[2].set_xlim(0, 1.0)
+    ax[3].set_xlim(0, 1.0)
+
+
+    if save == true
+        fig.savefig(directory * "colors_rel_spectra" * subfix * ".png", dpi=300, bbox_inches="tight")
+    else
+        fig.show()
+    end
+
 end
 
 
