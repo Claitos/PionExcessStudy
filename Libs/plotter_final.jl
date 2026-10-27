@@ -92,7 +92,8 @@ end
 
 
 
-function plot_spectra_relative_colors(results_cuts::ResultsList, data::Data; excess::Bool=false, QM::Bool=false, save::Bool=false)
+
+function plot_spectra_relative_colors(results_cuts::ResultsList, data::Data, ref_spectra::Vector; excess::Bool=false, QM::Bool=false, save::Bool=false)
 
     # 1 : reference spectrum
     # 2/3 : mass +-1sigma      8/9 : mass +-2sigma          14/15 : mass +-3sigma
@@ -150,7 +151,7 @@ function plot_spectra_relative_colors(results_cuts::ResultsList, data::Data; exc
         ax[1].plot(pT_range_plotted, spectra_br[i], label=label_br, color=colors[2], linestyle=linestyles[1], alpha=0.5)
     end
 
-    ax[1].plot(pT_range_plotted, getindex.((results_cuts.spectra_total[1])[:], 1), label="Reference", color=colors[1])
+    ax[1].plot(pT_range_plotted, getindex.((results_cuts.spectra_total[1])[:], 1), label="PDG2016+", color=colors[1])
     if QM == true
         ax[1].plot(pT_range_plotted, getindex.((results_cuts.spectra_total[20])[:], 1), label="Default QM2016+", color=colors[4])
     end
@@ -168,9 +169,10 @@ function plot_spectra_relative_colors(results_cuts::ResultsList, data::Data; exc
         ax[1].set_xlim(0.0, 1.0)
     end
 
+    ax[1].text(0.05, 0.30, L"Fluid$\it{u}$m + FastReso", transform=ax[1].transAxes, color="grey")
     ax[1].text(0.05, 0.24, "PbPb @ 2.76 TeV", transform=ax[1].transAxes)
     ax[1].text(0.05, 0.18, "0-5% centrality", transform=ax[1].transAxes)
-    ax[1].text(0.05, 0.12, L"$\pi^+$ / $\pi^-$ ", transform=ax[1].transAxes)
+    ax[1].text(0.05, 0.12, L"$\pi^+$ + $\pi^-$ ", transform=ax[1].transAxes)
 
     if QM == true
         ax[1].text(0.05, 0.06, "QM2016+", transform=ax[1].transAxes)
@@ -188,8 +190,8 @@ function plot_spectra_relative_colors(results_cuts::ResultsList, data::Data; exc
     end
 
     rel_spectra_ref = getindex.((results_cuts.spectra_total[1])[:], 1) ./ getindex.((results_cuts.spectra_total[1])[:], 1)
-    ax[2].plot(pT_range_plotted, rel_spectra_ref, label="Reference", color=colors[1], linestyle="solid")
-    ax[3].plot(pT_range_plotted, rel_spectra_ref, label="Reference", color=colors[1], linestyle="solid")
+    ax[2].plot(pT_range_plotted, rel_spectra_ref, label="PDG2016+", color=colors[1], linestyle="solid")
+    ax[3].plot(pT_range_plotted, rel_spectra_ref, label="PDG2016+", color=colors[1], linestyle="solid")
 
     if QM == true
         rel_spectra_qm_ref = getindex.((results_cuts.spectra_total[20])[:], 1) ./ getindex.((results_cuts.spectra_total[1])[:], 1)
@@ -197,14 +199,19 @@ function plot_spectra_relative_colors(results_cuts::ResultsList, data::Data; exc
         ax[3].plot(pT_range_plotted, rel_spectra_qm_ref, label="QM Reference", color=colors[4], linestyle="solid")
     end
 
+    data_ratio = data.dNdpt ./ ref_spectra
+    data_ratio_err = (total_uncertainties[1] ./ ref_spectra, total_uncertainties[2] ./ ref_spectra)
+    ax[2].errorbar(data.pt, data_ratio, yerr=data_ratio_err, xerr=data.xerrm, fmt=".", label="ALICE Data", color="black")
+    ax[3].errorbar(data.pt, data_ratio, yerr=data_ratio_err, xerr=data.xerrm, fmt=".", label="ALICE Data", color="black")
+
     ax[3].set_xlabel(L"$p_{\mathrm{T}}$ [GeV/c]")
     #ax[2].set_ylabel("ratio [arb.]")
     ax[2].tick_params(which="both", direction="in", top=true, right=true)
-    ax[2].set_ylim(0.85, 1.15)
+    ax[2].set_ylim(0.85, 1.2)
     ax[3].tick_params(which="both", direction="in", top=true, right=true)
-    ax[3].set_ylim(0.76, 1.05)
+    ax[3].set_ylim(0.76, 1.2)
 
-    fig.text(0.02, 0.25, "Ratio to Ref.", va="center", rotation="vertical")
+    fig.text(0.02, 0.25, "Ratio to PDG2016+", va="center", rotation="vertical")
 
     if excess == true
         ax[2].set_xlim(0, 1.0)

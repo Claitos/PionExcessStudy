@@ -346,6 +346,91 @@ end
 
 
 
+function plot_f0_interview(results_cuts::ResultsList, data::Data, ref_spectra; save::Bool=false)
+
+    stat_uncertainties = (-data.yerrm_stat, data.yerrp_stat)
+    syst_uncertainties = (-data.yerrm_syst, data.yerrp_syst)
+    total_uncertainties = (sqrt.(data.yerrm_stat .^ 2 .+ data.yerrm_syst .^ 2), sqrt.(data.yerrp_stat .^ 2 .+ data.yerrp_syst .^ 2))
+
+    no_of_lists = length(results_cuts.multiplicity_total)
+    colors = ["tab:red", "tab:purple", "tab:green", "tab:blue"]
+    linestyles = ["solid", "dashed", "dotted"]
+    labels = ["PDG2016+", L"$f_0(500)$ without width" , L"$f_0(500)$ with width", L"PDG2016+ with $f_0(500)$ :"];
+
+    spectra_wo_widths = [getindex.((results_cuts.spectra_total[i])[:], 1) for i in 2:8]
+    spectra_w_widths = [getindex.((results_cuts.spectra_total[i])[:], 1) for i in 9:15]
+
+
+    lenD = length(data.dNdpt)
+    println("Length of data.dNdpt: $(lenD)")
+
+    if length(data.pt) == length(spectra_wo_widths[1])
+        pT_range_plotted = data.pt
+    else
+        pT_range_plotted = collect(0:0.01:3)
+    end
+
+    fig, ax = subplots(2, 1, figsize=(5, 5.5), sharex=true, gridspec_kw=Dict("height_ratios" => [3, 1], "hspace" => 0.05))
+
+    ax[1].plot(pT_range_plotted, getindex.((results_cuts.spectra_total[1])[:], 1), label=labels[1], color=colors[1])
+    ax[1].errorbar(data.pt, data.dNdpt, yerr=total_uncertainties, xerr=data.xerrm, fmt=".", label="ALICE Data", color="black")
+    #ax[1].plot(0, 0, label=labels[4], color="white", linestyle="None")
+    ax[1].plot(pT_range_plotted, spectra_wo_widths[1], label=labels[2], color=colors[3], linestyle=linestyles[2])
+    ax[1].plot(pT_range_plotted, spectra_w_widths[1], label=labels[3], color=colors[4], linestyle=linestyles[2])
+    #ax[1].plot(pT_range_plotted, spectra_wo_widths[6], label=labels[3], color=colors[2], linestyle=linestyles[2])
+    #ax[1].plot(pT_range_plotted, spectra_wo_widths[7], color=colors[2], linestyle=linestyles[2])
+
+    ax[1].set_yscale("log")
+    ax[1].set_ylabel(L"$1 / (2\pi p_{\mathrm{T}}) \,\, dN/dp_{\mathrm{T}}dy \, $ [(GeV/c)$^{-2}$]")
+    ax[1].tick_params(which="both", direction="in", top=true, right=true)
+    ax[1].legend(loc="upper right")
+
+    ax[1].set_ylim(2e1, 2e3)
+    ax[1].set_xlim(0.0, 1.0)
+
+    ax[1].text(0.05, 0.30, L"Fluid$\it{u}$m + FastReso", transform=ax[1].transAxes, color="grey")
+    ax[1].text(0.05, 0.24, "PbPb @ 2.76 TeV", transform=ax[1].transAxes)
+    ax[1].text(0.05, 0.18, "0-5% centrality", transform=ax[1].transAxes)
+    ax[1].text(0.05, 0.12, L"$\pi^+$ + $\pi^-$ ", transform=ax[1].transAxes)
+    ax[1].text(0.05, 0.06, L"PDG2016+ & $f_0(500)$", transform=ax[1].transAxes)
+
+
+    rel_spectra_ref = getindex.((results_cuts.spectra_total[1])[:], 1) ./ getindex.((results_cuts.spectra_total[1])[:], 1)
+    ax[2].plot(pT_range_plotted, rel_spectra_ref, label=labels[1], color=colors[1], linestyle="solid")
+
+    rel_spectra_wo_width = spectra_wo_widths[1] ./ getindex.((results_cuts.spectra_total[1])[:], 1)
+    ax[2].plot(pT_range_plotted, rel_spectra_wo_width, label=labels[2], color=colors[3], linestyle=linestyles[2])
+
+    # rel_spectra_wo_width = spectra_wo_widths[6] ./ getindex.((results_cuts.spectra_total[1])[:], 1)
+    # ax[2].plot(pT_range_plotted, rel_spectra_wo_width, label=labels[3], color=colors[2], linestyle=linestyles[2])
+
+    # rel_spectra_wo_width = spectra_wo_widths[7] ./ getindex.((results_cuts.spectra_total[1])[:], 1)
+    # ax[2].plot(pT_range_plotted, rel_spectra_wo_width, color=colors[2], linestyle=linestyles[2])
+
+    rel_spectra_w_width = spectra_w_widths[1] ./ getindex.((results_cuts.spectra_total[1])[:], 1)
+    ax[2].plot(pT_range_plotted, rel_spectra_w_width, label=labels[3], color=colors[4], linestyle=linestyles[2])
+
+    data_ratio = data.dNdpt ./ ref_spectra
+    data_ratio_err = (total_uncertainties[1] ./ ref_spectra, total_uncertainties[2] ./ ref_spectra)
+    ax[2].errorbar(data.pt, data_ratio, yerr=data_ratio_err, xerr=data.xerrm, fmt=".", label="ALICE Data", color="black")
+
+    ax[2].set_xlabel(L"$p_{\mathrm{T}}$ [GeV/c]")
+    ax[2].set_ylabel("Ratio to PDG2016+")
+    ax[2].tick_params(which="both", direction="in", top=true, right=true)
+    ax[2].set_ylim(0.9, 1.2)
+    ax[2].set_xlim(0, 1.0)
+
+
+    if save == true
+        fig.savefig(directory * "f0_spectra3.png", dpi=300, bbox_inches="tight")
+    else
+        fig.show()
+    end
+
+end
+
+
+
 
 
 

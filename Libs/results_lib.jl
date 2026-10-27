@@ -19,6 +19,8 @@ function get_results(freeze_out_results, particle_dictionary, fluid_properties, 
     pT_excess_max = 0.5
     pT_min = 0.1      #  is not 0.1 for plot
     pT_max = 3.0
+    pT_reference_min = 0.5
+    pT_reference_max = 2.0
 
     spectrum_thermal = spectra_lf(freeze_out_results, particle_dictionary, fluid_properties, pt_range; decays=false, interpolate_3d=interpolate_3d);
     spectrum_total = spectra_lf(freeze_out_results, particle_dictionary, fluid_properties, pt_range; decays=true, interpolate_3d=interpolate_3d);
@@ -29,8 +31,8 @@ function get_results(freeze_out_results, particle_dictionary, fluid_properties, 
     mult_thermal_excess = multiplicity_lf(freeze_out_results, particle_dictionary, fluid_properties; decays=false,pt_min=pT_excess_min,pt_max=pT_excess_max, interpolate_3d=interpolate_3d);
     mult_total_excess = multiplicity_lf(freeze_out_results, particle_dictionary, fluid_properties; decays=true,pt_min=pT_excess_min,pt_max=pT_excess_max, interpolate_3d=interpolate_3d);
 
-    mult_thermal_reference = multiplicity_lf(freeze_out_results, particle_dictionary, fluid_properties; decays=false,pt_min=0.5,pt_max=3.0, interpolate_3d=interpolate_3d);
-    mult_total_reference = multiplicity_lf(freeze_out_results, particle_dictionary, fluid_properties; decays=true,pt_min=0.5,pt_max=3.0, interpolate_3d=interpolate_3d);
+    mult_thermal_reference = multiplicity_lf(freeze_out_results, particle_dictionary, fluid_properties; decays=false,pt_min=pT_reference_min,pt_max=pT_reference_max, interpolate_3d=interpolate_3d);
+    mult_total_reference = multiplicity_lf(freeze_out_results, particle_dictionary, fluid_properties; decays=true,pt_min=pT_reference_min,pt_max=pT_reference_max, interpolate_3d=interpolate_3d);
 
     return Results(spectrum_thermal, spectrum_total, mult_thermal, mult_total, mult_thermal_excess, mult_total_excess, mult_thermal_reference, mult_total_reference)
 end
@@ -60,6 +62,8 @@ function get_results_list(freeze_out_results, particle_dictionary_list, fluid_pr
     pT_excess_max = 0.5
     pT_min = 0.1
     pT_max = 3.0
+    pT_reference_min = 0.5
+    pT_reference_max = 2.0
     no_of_lists = length(particle_dictionary_list)
 
     spectra_thermal = [spectra_lf(freeze_out_results, getfield(particle_dictionary_list[i], field), fluid_properties, pt_range; decays=false, interpolate_3d=interpolate_3d) for i in 1:no_of_lists];
@@ -71,8 +75,8 @@ function get_results_list(freeze_out_results, particle_dictionary_list, fluid_pr
     mult_thermal_excess = [multiplicity_lf(freeze_out_results, getfield(particle_dictionary_list[i], field), fluid_properties; decays=false,pt_min=pT_excess_min,pt_max=pT_excess_max, interpolate_3d=interpolate_3d) for i in 1:no_of_lists];
     mult_total_excess = [multiplicity_lf(freeze_out_results, getfield(particle_dictionary_list[i], field), fluid_properties; decays=true,pt_min=pT_excess_min,pt_max=pT_excess_max, interpolate_3d=interpolate_3d) for i in 1:no_of_lists];
 
-    mult_thermal_reference = [multiplicity_lf(freeze_out_results, getfield(particle_dictionary_list[i], field), fluid_properties; decays=false,pt_min=0.5,pt_max=3.0, interpolate_3d=interpolate_3d) for i in 1:no_of_lists];
-    mult_total_reference = [multiplicity_lf(freeze_out_results, getfield(particle_dictionary_list[i], field), fluid_properties; decays=true,pt_min=0.5,pt_max=3.0, interpolate_3d=interpolate_3d) for i in 1:no_of_lists];
+    mult_thermal_reference = [multiplicity_lf(freeze_out_results, getfield(particle_dictionary_list[i], field), fluid_properties; decays=false,pt_min=pT_reference_min,pt_max=pT_reference_max, interpolate_3d=interpolate_3d) for i in 1:no_of_lists];
+    mult_total_reference = [multiplicity_lf(freeze_out_results, getfield(particle_dictionary_list[i], field), fluid_properties; decays=true,pt_min=pT_reference_min,pt_max=pT_reference_max, interpolate_3d=interpolate_3d) for i in 1:no_of_lists];
 
     return ResultsList(spectra_thermal, spectra_total, mult_thermal, mult_total, mult_thermal_excess, mult_total_excess, mult_thermal_reference, mult_total_reference)
 end
@@ -183,9 +187,9 @@ REFERENCE_MULT_THERMAL = 346.68494311992293
 
 function rescale_result_list(result_list::ResultsList; reference_mult = REFERENCE_MULT_TOTAL)
 
-    len = length(result_list.multiplicity_total)
+    len = length(result_list.multiplicity_total)  # how many results are in the list (All cases: default, mass/br edge etc)
     rr_multiplicities = [result_list.multiplicity_total_reference[i][1] for i in 1:len];
-    println("Reference multiplicities (0.5 - 3.0 GeV/c): ", rr_multiplicities);
+    println("Multiplicities in the reference region (0.5 - 2.0 GeV/c): ", rr_multiplicities);
     
     scaling_factors = [reference_mult / rr_mult for rr_mult in rr_multiplicities];
     println("Scaling factors: ", scaling_factors);

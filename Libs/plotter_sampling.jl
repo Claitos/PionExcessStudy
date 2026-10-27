@@ -325,7 +325,7 @@ function plot_sample_spectra_relative_4(results_cuts::ResultsList, results_cuts_
 
     for i in 1:no_of_lists
         label_thermal = i == 1 ? "Thermal Spectrum" : ""
-        label_total   = [["Reference", "Modified Parameters"]; fill("", no_of_lists - 2)][i]
+        label_total   = [["PDG2016+", "Modified Parameters"]; fill("", no_of_lists - 2)][i]
         colors = i == 1 ? "tab:red" : "tab:orange"
         order = i == 1 ? 2 : 1
         if i == 1
@@ -357,16 +357,17 @@ function plot_sample_spectra_relative_4(results_cuts::ResultsList, results_cuts_
         ax[1].text(0.32, 1000, "0-5% centrality")
     else
         label_n = 0.1
-        ax[1].text(2.1, 300/label_n, "PbPb @ 2.76 TeV")
-        ax[1].text(2.1, 150/label_n, "0-5% centrality")
-        ax[1].text(2.1, 75/label_n, L"$\pi^+$ / $\pi^-$ ")
-        ax[1].text(2.1, 38/label_n, "PDG2016+")
+        ax[1].text(0.8, 300/label_n, L"Fluid$\it{u}$m + FastReso", color="grey")
+        ax[1].text(0.8, 120/label_n, "PbPb @ 2.76 TeV")
+        ax[1].text(0.8, 48/label_n, "0-5% centrality")
+        ax[1].text(0.8, 19/label_n, L"$\pi^+$ + $\pi^-$ ")
+        #ax[1].text(2.1, 38/label_n, "PDG2016+")
         ax[1].text(0.2, 0.1, "before rescaling", transform=ax[1].transAxes, fontsize=12, color="black")
     end
 
     for i in 1:no_of_lists
         label_thermal = i == 1 ? "Thermal Spectrum" : ""
-        label_total   = [["Reference", "Modified Parameters"]; fill("", no_of_lists - 2)][i]
+        label_total   = [["PDG2016+", "Modified Parameters"]; fill("", no_of_lists - 2)][i]
         colors = i == 1 ? "tab:red" : "tab:orange"
         order = i == 1 ? 2 : 1
         if i == 1
@@ -381,11 +382,17 @@ function plot_sample_spectra_relative_4(results_cuts::ResultsList, results_cuts_
         ax[2].plot(data.pt, rel_spectra_total, label=label_total, color=colors, alpha=alpha, zorder=order)
         
     end
+
+    # ref_spectra = getindex.((results_cuts_thermal.spectra_total[1])[:],1)
+    # rel_spectra_data = data.dNdpt ./ ref_spectra
+    # rel_spectra_data_err = (total_uncertainties[1] ./ ref_spectra, total_uncertainties[2] ./ ref_spectra)
+    # ax[2].errorbar(data.pt, rel_spectra_data, yerr=rel_spectra_data_err, xerr=data.xerrm, fmt=".", label="ALICE Data", color="black")
+
     ax[2].axvline(0.5, color="gray", linestyle="--", label=L"$0.5 < p_{\mathrm{T}} < 2.0$ GeV/c")
     ax[2].axvline(2.0, color="gray", linestyle="--")
 
     ax[2].set_xlabel(L"$p_{\mathrm{T}}$ [GeV/c]")
-    ax[2].set_ylabel("Ratio to Ref.")
+    ax[2].set_ylabel("Ratio to PDG2016+")
     ax[2].tick_params(which="both", direction="in", top=true, right=true)
     ax[2].set_ylim(0.6, 1.4)
 
@@ -395,7 +402,7 @@ function plot_sample_spectra_relative_4(results_cuts::ResultsList, results_cuts_
 
     for i in 1:no_of_lists
         label_thermal = i == 1 ? "Thermal Spectrum" : ""
-        label_total   = [["Reference", "Modified Parameters"]; fill("", no_of_lists - 2)][i]
+        label_total   = [["PDG2016+", "Modified Parameters"]; fill("", no_of_lists - 2)][i]
         colors = i == 1 ? "tab:red" : "tab:orange"
         order = i == 1 ? 2 : 1
         if i == 1
@@ -422,7 +429,7 @@ function plot_sample_spectra_relative_4(results_cuts::ResultsList, results_cuts_
 
     for i in 1:no_of_lists
         label_thermal = i == 1 ? "Thermal Spectrum" : ""
-        label_total   = [["Reference", "Modified Parameters"]; fill("", no_of_lists - 2)][i]
+        label_total   = [["PDG2016+", "Modified Parameters"]; fill("", no_of_lists - 2)][i]
         colors = i == 1 ? "tab:red" : "tab:orange"
         order = i == 1 ? 2 : 1
         if i == 1
